@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html class=" js csstransforms3d"><head>
+	<meta charset="utf-8">
+	<meta name="renderer" content="webkit">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>文章发布</title>
+	<link rel="stylesheet" href="css/base.css">
+	<link rel="stylesheet" href="css/page.css">
+	<!--[if lte IE 8]>
+	<link href="css/ie8.css" rel="stylesheet" type="text/css"/>
+	<![endif]-->
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/main.js"></script>
+	<script type="text/javascript" src="js/modernizr.js"></script>
+	<script type="text/javascript" src="js/PagingManage.js"></script>
+</head>
+
+<body style="background: #f6f5fa;">
+
+	<!--content S-->
+	<div class="super-content RightMain" id="RightMain">
+		
+		<!--header-->
+		<div class="superCtab">
+			<div class="ctab-title clearfix"><h3>一起学</h3></div>
+			<div class="ctab-Main">
+				<div class="ctab-Mian-cont">
+					<div class="Mian-cont-btn clearfix">
+						<div class="operateBtn">
+							<a href="learnAdd" class="greenbtn publish">发布一起学</a>
+						</div>
+						<div class="searchBar">
+							<input type="text" id="keywords" value="" class="form-control srhTxt" placeholder="输入标题关键字搜索">
+							<input type="button" class="srhBtn" value="" onclick="searchInfoLearn();">
+						</div>
+					</div>
+					
+					<div class="Mian-cont-wrap">
+						<div class="defaultTab-T">
+							<table border="0" cellspacing="0" cellpadding="0" class="defaultTable">
+								<tbody><tr><th class="t_0">育儿标题</th><th class="t_0">成长标题</th><th class="t_2">发布时间</th><th class="t_3">是否有效</th><th class="t_4">操作</th></tr>
+							</tbody></table>
+						</div>
+						<table border="0" cellspacing="0" cellpadding="0" class="defaultTable defaultTable2">
+							<tbody id = "infoLearnList">
+						</tbody></table>
+						<!--pages S-->
+						<div class="pageSelect" id="complete">
+						</div>
+						<!--pages E-->
+					</div>
+				
+				</div>
+			</div>
+		</div>
+		<!--main-->
+	</div>
+	<!--content E-->
+</body></html>
+<script>
+    var pageSize =10;
+    $(function(){
+        this.getInfoLearns(1,pageSize,'');
+    }.bind(this))
+
+    function getInfoLearns(pageNo,pageSize,keyWords) {
+        var infoLearn = new InfoLearn(pageNo,pageSize,keyWords);
+        $.ajax({
+            type: 'POST',
+            url: '/getInfoLearns',
+            data: infoLearn,
+            dataType:'json',
+            success:function(data, status){
+                this.PagingManage($('#complete'),data.total, data.pageSize, data.pageNum,data.pages);
+                var infoLearns = data.list;
+                let infoLearnHtml = '';
+                for(var i =0 ;i<infoLearns.length;i++){
+                    let titles = infoLearns[i].title.split("|");
+                    infoLearnHtml += 	'<tr><td class="t_0">'+titles[0]+'</td><td class="t_0">'+titles[1]+'</td>' +
+						'<td class="t_2">'+this.timeFormat(infoLearns[i].createTime*1000,'yyyy-MM-dd')+'</td>' +
+                        '<td class="t_3">'+this.isDisplay(infoLearns[i].stateType)+'</td><td class="t_4"><div class="btn">' +
+                        '<a href="learnAdd?id=' +infoLearns[i].infoId+ '" class="modify">修改</a>' +
+                        '<a href="javascript:;" class="delete" onclick="deleteInfoLearn(' +infoLearns[i].infoId+ ')">删除</a></div></td></tr>';
+                }
+                document.getElementById("infoLearnList").innerHTML = infoLearnHtml;
+            }.bind(this),
+            error:function(err, status){
+            }});
+    }
+    function InfoLearn(pageNo,pageSize,keywords){
+        this.pageNo = pageNo;
+        this.pageSize = pageSize;
+        this.keywords = keywords;
+    }
+    function switchPage(divId, page) {
+        this.getInfoLearns(page,pageSize,$('#keywords').val());
+    }
+    function searchInfoLearn() {
+        this.getInfoLearns(1,pageSize,$('#keywords').val());
+    }
+
+    function deleteInfoLearn(id) {
+        var r=confirm("确认要删除该内容吗？");
+        if (r==true){
+            $.ajax({
+                type: 'POST',
+                url: '/deleteInfoLearn',
+                data: {"id":id},
+                dataType:'json',
+                success:function(data, status){
+                    this.getInfoLearns(1,pageSize,$('#keywords').val());
+                }.bind(this),
+                error:function(err, status){
+                }});
+        }
+    }
+
+    function isDisplay(stateType) {
+        if(stateType == 1){
+            return "有效";
+        }else{
+            return "无效";
+        }
+    }
+    function timeFormat(date,fmt) { //author: meizz
+        var date = new Date(date);
+        let showValue = fmt;
+        const o = {
+            'M+': date.getMonth() + 1, //月份
+            'd+': date.getDate(), //日
+            'h+': date.getHours(), //小时
+            'm+': date.getMinutes(), //分
+            's+': date.getSeconds(), //秒
+            'q+': Math.floor((date.getMonth() + 3) / 3) //季度
+            //'S': date.getMilliseconds() //毫秒
+        };
+        if (/(y+)/.test(showValue)) {
+            showValue = showValue.replace(RegExp.$1, (`${date.getFullYear()}${''}`).
+            substr(4 - RegExp.$1.length));
+        }
+        for (const k in o) {
+            if (new RegExp(`(${k})`).test(showValue)) {
+                showValue = showValue.replace(RegExp.$1, (RegExp.$1.length === 1) ?
+                    (o[k]) : ((`00${o[k]}`).substr((`${''}${o[k]}`).length)));
+            }
+        }
+        return showValue;
+    }
+</script>

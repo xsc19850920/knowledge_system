@@ -1,0 +1,51 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD com.example.Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace = "com.knowledge.web.mapper.InfoReadMapper">
+    <resultMap id = "result" type = "com.knowledge.web.domain.InfoRead">
+        <result property = "createTime" column = "create_time"/>
+        <result property = "modifyTime" column = "modify_time"/>
+        <result property = "operIp" column = "oper_ip"/>
+        <result property = "operUserId" column = "oper_user_id"/>
+        <result property = "delFlag" column = "del_flag"/>
+        <result property = "infoId" column = "info_id"/>
+        <result property = "title" column = "title"/>
+        <result property = "flagNew" column = "flag_new"/>
+        <result property = "infoDate" column = "info_date"/>
+        <result property = "stateType" column = "state_type"/>
+        <association property="infoFiles" column="info_id"
+                     select="com.knowledge.web.mapper.InfoFileMapper.getInfoFileById">
+        </association>
+    </resultMap>
+    <select id = "getInfoReads" resultMap = "result">
+        SELECT * FROM info_read where del_flag = 0
+        <if test="keywords != null and keywords.length()>0">
+            and title like CONCAT('%', #{keywords}, '%')
+        </if>
+        	order by modify_time desc
+    </select>
+
+    <select id = "getInfoReadById" resultMap = "result">
+        SELECT * FROM info_read where info_id = #{id} and del_flag = 0 ;
+    </select>
+
+    <insert id="insertInfoRead">
+       INSERT INTO info_read (info_id,flag_new,title,state_type,del_flag,oper_user_id,oper_ip,create_time,modify_time,info_date)
+        values (#{infoRead.infoId},#{infoRead.flagNew},#{infoRead.title},#{infoRead.stateType},#{infoRead.delFlag}
+        ,#{infoRead.operUserId},#{infoRead.operIp},#{infoRead.createTime},#{infoRead.modifyTime},#{infoRead.infoDate})
+    </insert>
+
+    <update id="deleteInfoRead" >
+        UPDATE info_read SET del_flag = 1 WHERE info_id = #{id}
+    </update>
+
+	<update id="updateReadNewSign" >
+        UPDATE info_read SET flag_new = 0 WHERE info_id = #{id}
+    </update>
+
+    <update id="updateInfoRead" >
+        UPDATE info_read SET modify_time = #{infoRead.modifyTime},oper_user_id = #{infoRead.operUserId},info_date = #{infoRead.infoDate}
+        ,title =#{infoRead.title},flag_new =#{infoRead.flagNew},state_type =#{infoRead.stateType} WHERE info_id = #{infoRead.infoId}
+    </update>
+</mapper>

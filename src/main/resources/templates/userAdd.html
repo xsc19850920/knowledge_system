@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html class=" js csstransforms3d"><head>
+	<meta charset="utf-8">
+	<meta name="renderer" content="webkit">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>用户管理</title>
+	<link rel="stylesheet" href="css/base.css">
+	<link rel="stylesheet" href="css/page.css">
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/main.js"></script>
+	<script type="text/javascript" src="js/modernizr.js"></script>
+	<script type="text/javascript" src="js/jquery.selectui.js"></script>
+	<script type="text/javascript" src="js/jquery.form.js"></script>
+	<script type="text/javascript" src="js/layer/layer.js"></script>
+	<link rel="stylesheet" type="text/css" href="js/webuploader/webuploader.css">    
+    <link rel="stylesheet" type="text/css" href="js/webuploader/demo.css">
+	
+	<script>
+	$(function($) {
+		$("select").selectui({
+			// 是否自动计算宽度
+			autoWidth: true,
+			// 是否启用定时器刷新文本和宽度
+			interval: true
+		});
+	});
+	</script>
+<link href="js/utf8-jsp/themes/default/css/ueditor.css" type="text/css" rel="stylesheet">
+<script src="js/utf8-jsp/third-party/codemirror/codemirror.js" type="text/javascript" defer></script>
+<link rel="stylesheet" type="text/css" href="js/utf8-jsp/third-party/codemirror/codemirror.css">
+<script src="js/utf8-jsp/third-party/zeroclipboard/ZeroClipboard.js" type="text/javascript" defer></script></head>
+
+<body style="background: rgb(246, 245, 250);">
+	<!--content S-->
+	<div class="super-content">
+		
+		<div class="superCtab">
+			<div class="publishArt">
+				<h4>用户管理</h4>
+				<div class="pubMain">
+					<a href="javascript:history.go(-1)" class="backlistBtn"><i class="ico-back"></i>返回列表</a>
+					<form action="" method="post" id="userForm">
+						<h5 class="pubtitle">用户名称</h5>
+						<div class="pub-txt-bar">
+							<input type="text" class="shuruTxt" id = "accountId" name="account" maxlength="20">
+						</div>
+
+						<h5 class="pubtitle">用户密码</h5>
+						<div class="pub-txt-bar">
+							<input type="password" class="shuruTxt" id = "passwordId" name="password" maxlength="32">
+						</div>
+						
+						<h5 class="pubtitle">确认密码</h5>
+						<div class="pub-txt-bar">
+							<input type="password" class="shuruTxt" id = "passwordIdConfirm" maxlength="32">
+						</div>
+						
+						<div class="pub-btn">
+							<input type="button" id="submit" value="添加" class="saveBtn" onclick="submitUser();">
+						</div>
+					</form>
+				</div>
+			</div>
+		
+		</div>
+		<!--main-->
+		
+	</div>
+	<!--content E-->
+</body></html>
+<script>
+    var id = null;
+    var currUser = null;
+    $(function(){
+        id = GetQueryString("id");
+        if(id != null){
+            getUserById(id);
+            $("#submit").val("修改");
+        }
+    }.bind(this));
+
+    function submitUser() {
+        var check = true;
+        if($('#accountId').val().length == 0){
+            check = false;
+            alert("会员名称不能为空");
+        }
+        if($('#passwordId').val().length == 0){
+            check = false;
+            alert("会员密码不能为空");
+        }
+        if($('#passwordId').val() != $('#passwordIdConfirm').val()){
+            check = false;
+            alert("两次密码不一致");
+        }
+        if(check){
+        
+        	var ii = layer.load();
+    		
+            if(id !=null){
+                if(currUser.account != $('#accountId').val()){
+                    $.ajax({
+                        type: 'POST',
+                        url: '/getuserbyaccout',
+                        data: {"account":$('#accountId').val()},
+                        dataType:'json',
+                        success:function(data, status){
+                            if(data){
+                                alert("该会员已经存在，请重新输入");
+                            }else{
+                                this.updateUser();
+                            }
+                        }.bind(this),
+                           error:function(err, status){
+                        }});
+                }else{
+                    this.updateUser();
+                }
+            }else{
+                $.ajax({
+                    type: 'POST',
+                    url: '/getuserbyaccout',
+                    data: {"account":$('#accountId').val()},
+                    dataType:'json',
+                    success:function(data, status){
+                        if(data){
+                            alert("该会员已经存在，请重新输入");
+                        }else{
+                            this.insertUser();
+                        }
+                    }.bind(this),
+                    error:function(err, status){
+                    }});
+            }
+            layer.close(ii);
+        }
+    }
+    function insertUser() {
+        $.ajax({
+            type: 'POST',
+            url: '/insertuser',
+            data: $('#userForm').serialize(),
+            dataType:'json',
+            success:function(data, status){
+                window.location.href = "/user";
+            }.bind(this),
+            error:function(err, status){
+            }});
+    }
+
+    function updateUser() {
+        currUser.account = $('#accountId').val();
+        currUser.password = $("#passwordId").val();
+        $.ajax({
+            type: 'POST',
+            url: '/updateuser',
+            data: JSON.stringify(currUser),
+            dataType:'json',
+            contentType : 'application/json',
+            success:function(data, status){
+                window.location.href = "/user";
+            }.bind(this),
+            error:function(err, status){
+            }});
+    }
+
+    function getUserById(id) {
+        $.ajax({
+            type: 'POST',
+            url: '/getuserbyid',
+            data: {"id":id},
+            dataType:'json',
+            success:function(data, status){
+                currUser = data;
+                $("#accountId").val(data.account);
+                //$("#passwordId").val(data.password);
+            }.bind(this),
+            error:function(err, status){
+                console.log(err);
+            }});
+    }
+
+    function GetQueryString(name)
+    {
+        var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+        var r = window.location.search.substr(1).match(reg);
+        if(r!=null)return  unescape(r[2]); return null;
+    }
+</script>
+<script>
+ 
+</script>

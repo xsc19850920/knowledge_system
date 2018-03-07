@@ -1,0 +1,42 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD com.example.Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace = "com.knowledge.web.mapper.UserMapper">
+    <resultMap id = "result" type = "com.knowledge.web.domain.User">
+        <result property = "id" column = "id"/>
+        <result property = "account" column = "account"/>
+        <result property = "password" column = "password"/>
+        <result property = "createTime" column = "create_time"/>
+        <result property = "status" column = "status"/>
+    </resultMap>
+    <select id = "getUsers" resultMap = "result">
+        SELECT * FROM info_user where status = 0
+        <if test="keywords != null and keywords.length()>0">
+            and (account like CONCAT('%', #{keywords}, '%')  OR  id like CONCAT('%', #{keywords}, '%'))
+        </if>
+    </select>
+    <select id = "userLogin" resultMap = "result">
+        SELECT * FROM info_user where account = #{account} and password = #{password} and status = 0;
+    </select>
+
+    <select id = "getUserById" resultMap = "result">
+        SELECT * FROM info_user where id = #{id} and status = 0;
+    </select>
+
+    <select id = "getUserByAccount" resultMap = "result">
+        SELECT * FROM info_user where account = #{account} and status = 0;
+    </select>
+
+    <insert id="insertUser">
+        INSERT INTO info_user (id,account,password,create_time,status) values (#{user.id},#{user.account},#{user.password},now(),0)
+    </insert>
+
+    <update id="deleteUser" >
+        UPDATE info_user SET status = 1 WHERE id = #{id}
+    </update>
+
+    <update id="updateUser" >
+        UPDATE info_user SET account = #{user.account},password = #{user.password},create_time = now() WHERE id = #{user.id}
+    </update>
+</mapper>

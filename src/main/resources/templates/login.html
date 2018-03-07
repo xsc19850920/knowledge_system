@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="renderer" content="webkit">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>来说 - 后台管理系统</title>
+	<link rel="stylesheet" href="css/base.css" />
+	<link rel="stylesheet" href="css/login.css" />
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/jquery.form.js"></script>
+	<link rel="icon" type="image/x-icon" href="/static/favicon.ico"/>
+</head>
+<body>
+<div class="superloginA"></div>
+<div class="loginBox">
+	<div class="logo"><img src="images/logo_login.png"/></div>
+	<div class="loginMain">
+		<div class="tabwrap">
+			<form id="loginForm" method="POST" action="#">
+				<table border="0" cellspacing="0" cellpadding="0">
+					<tr><td class="title">用户名：</td><td><input type="text" class="form-control txt" name="account"/></td></tr>
+					<tr><td class="title">密   码：</td><td><input type="password" class="form-control txt" name = "password"/></td></tr>
+					<tr class="errortd"><td>&nbsp;</td><td id = "error" style="display: none"><i class="ico-error"></i><span class="errorword">用户名或密码错误，请重新输入！</span></td></tr>
+					<tr><td>&nbsp;</td><td><input type="button" class="loginbtn" value="登录" onclick="login();" /><input type="button" class="resetbtn" value="重置" onclick="reset();"/></td></tr>
+				</table>
+			</form>
+		</div>
+	</div>
+</div>
+<div class="footer">Copyright © 2017-2018 Knowledge All Rights Reserved.</div>
+</body>
+</html>
+<script>
+    function reset() {
+        $('#loginForm').reset()
+    }
+    function login() {
+        $.ajax({
+            type: 'POST',
+            url: '/check',
+            data: $('#loginForm').serialize(),
+            dataType:'json',
+            success:function(data, status){
+                sessionStorage.setItem('account',data.account);
+                sessionStorage.setItem('id',data.id);
+                $('#error').hide();
+                window.location.href = "index";
+            },
+            error:function(err, status){
+                $('#error').show();
+            }});
+    }
+</script>

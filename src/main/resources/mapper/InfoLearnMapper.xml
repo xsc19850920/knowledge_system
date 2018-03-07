@@ -1,0 +1,48 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD com.example.Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    <mapper namespace = "com.knowledge.web.mapper.InfoLearnMapper">
+    <resultMap id = "result" type = "com.knowledge.web.domain.InfoLearn">
+        <result property = "operIp" column = "oper_ip"/>
+        <result property = "operUserId" column = "oper_user_id"/>
+        <result property = "delFlag" column = "del_flag"/>
+        <result property = "infoId" column = "info_id"/>
+        <result property = "infoDate" column = "info_date"/>
+        <result property = "title" column = "title"/>
+        <result property = "stateType" column = "state_type"/>
+        <result property = "modifyTime" column = "modify_time"/>
+        <result property = "createTime" column = "create_time"/>
+        <association property="infoFiles" column="info_id"
+                     select="com.knowledge.web.mapper.InfoFileMapper.getInfoFileById">
+        </association>
+    </resultMap>
+    <select id = "getInfoLearns" resultMap = "result">
+        SELECT * FROM info_learn where del_flag = 0 
+        <if test="keywords != null and keywords.length()>0">
+            and title like CONCAT('%', #{keywords}, '%')
+        </if>
+        	order by modify_time desc
+    </select>
+
+    <select id = "getInfoLearnById" resultMap = "result">
+        SELECT * FROM info_learn  where info_id = #{id} and del_flag = 0 order by modify_time desc;
+    </select>
+
+
+    <insert id="insertInfoLearn">
+        INSERT INTO info_learn (oper_ip,oper_user_id,del_flag,info_id,info_date,title,state_type,modify_time,create_time)
+        values (#{infoLearn.operIp},#{infoLearn.operUserId},#{infoLearn.delFlag},#{infoLearn.infoId}
+        ,#{infoLearn.infoDate},#{infoLearn.title},#{infoLearn.stateType},#{infoLearn.modifyTime},#{infoLearn.createTime})
+    </insert>
+
+    <update id="deleteInfoLearn" >
+        UPDATE info_learn SET del_flag = 1 WHERE info_id = #{id}
+    </update>
+
+    <update id="updateInfoLearn" >
+         UPDATE info_learn SET title = #{infoLearn.title},modify_time = #{infoLearn.modifyTime}
+          ,oper_user_id = #{infoLearn.operUserId},state_type = #{infoLearn.stateType},info_date = #{infoLearn.infoDate}
+          WHERE info_id = #{infoLearn.infoId}
+    </update>
+</mapper>

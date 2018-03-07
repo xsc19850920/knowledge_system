@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html class=" js csstransforms3d"><head>
+	<meta charset="utf-8">
+	<meta name="renderer" content="webkit">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>内容管理</title>
+	<link rel="stylesheet" href="css/base.css">
+	<link rel="stylesheet" href="css/page.css">
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/main.js"></script>
+	<script type="text/javascript" src="js/modernizr.js"></script>
+	<script type="text/javascript" src="js/jquery.selectui.js"></script>
+	<script type="text/javascript" src="js/layer/layer.js"></script>
+	<link rel="stylesheet" type="text/css" href="js/webuploader/webuploader.css">    
+    <link rel="stylesheet" type="text/css" href="js/webuploader/demo.css">
+	<script src="http://pv.sohu.com/cityjson?ie=utf-8"></script>
+	<script>
+	$(function($) {
+		$("select").selectui({
+			// 是否自动计算宽度
+			autoWidth: true,
+			// 是否启用定时器刷新文本和宽度
+			interval: true
+		});
+	});
+	</script>
+<link href="js/utf8-jsp/themes/default/css/ueditor.css" type="text/css" rel="stylesheet">
+<script src="js/utf8-jsp/third-party/codemirror/codemirror.js" type="text/javascript" defer></script>
+<link rel="stylesheet" type="text/css" href="js/utf8-jsp/third-party/codemirror/codemirror.css">
+<script src="js/utf8-jsp/third-party/zeroclipboard/ZeroClipboard.js" type="text/javascript" defer></script></head>
+
+<body style="background: rgb(246, 245, 250);">
+	<!--content S-->
+	<div class="super-content">
+		
+		<div class="superCtab">
+			<div class="publishArt">
+				<h4>内容管理</h4>
+				<div class="pubMain">
+					<a href="javascript:history.go(-1)" class="backlistBtn"><i class="ico-back"></i>返回列表</a>
+					<form method="POST" action="" id="reviewForm">
+						<h5 class="pubtitle">内容标题</h5>
+						<div class="pub-txt-bar">
+							<input type="text" class="shuruTxt" name = "title" id = "titleId" maxlength="60">
+						</div>
+						<h5 class="pubtitle">缩略图</h5>
+						<div class="Thumbnails clearfix">
+							<div class="Thumblist" id="preview">
+							</div>
+							<div class="Thumblistbg upload-img" id="myupload">
+								<input id="fileImage" type="file"  onchange="file_ajax_submit();" accept="image/*"/>
+								<a href="javascript:;" class="Thumbbtn" ><i class="ico-download"></i>上传图片</a>
+							</div>
+						</div>
+						<h5 class="pubtitle">图片路径</h5>
+						<div class="pub-txt-bar">
+							<input type="text" class="shuruTxt" id = "urlId" name="fileSrc" maxlength="300">
+						</div>
+						
+						<h5 class="pubtitle">是否有效</h5>
+						<div class="pubselect">
+							<span class="select_ui"><span class="select_text_ui" style="min-width: 6em;">是否有效</span><b class="select_arrow"></b><select name="stateType" id="stateTypeId">
+								<option value="1">有效</option>
+								<option value="0">无效</option>
+							</select></span>
+						</div>
+						<input type="hidden" value="0.0.0.0" name = "operIp" id="ipId">
+						<input type="hidden" value="" name = "operUserId" id="userId">
+						<div class="pub-btn">
+							<input type="button" id="submit" value="发布" class="saveBtn"  onclick="submitReview();">
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</body></html>
+<script>
+    var id = null;
+    var currReview = null;
+    $(function(){
+		$("#ipId").val(returnCitySN["cip"]);
+        $("#userId").val(sessionStorage.getItem("id"));
+        id = GetQueryString("id");
+        if(id != null){
+            getReviewById(id);
+            $("#submit").val("修改");
+        }
+    }.bind(this));
+    function getReviewById() {
+        $.ajax({
+            type: 'POST',
+            url: '/getReviewById',
+            data: {"id":id},
+            dataType:'json',
+            success:function(data, status){
+                currReview = data;
+                $("#titleId").val(data.title);
+                if(data.fileSrc !=null && data.fileSrc.length > 0){
+                    let html = '<div class="Thumb_li" style="width:217px; height:217px; "><div class="bg"><a href="javascript:" class="Thumb_delete" title="删除" >删除</a></div>' +
+                        '<img id="uploadImage" src="' + data.fileSrc + '" class="upload_image" />'+
+                        '</div>';
+                    $("#preview").html(html);
+                    $('.Thumb_li').hover(function(){
+                        $(this).children('.bg').fadeIn();
+                    },function(){
+                        $(this).children('.bg').fadeOut();
+                    });
+                    let start = data.fileSrc.indexOf("knowledge/")+10;
+                    let end = data.fileSrc.indexOf("?")
+                    let key  = data.fileSrc.substring(start,end)
+                    $(".Thumb_delete").click(function(){
+                        $(this).parent().parent('.Thumb_li').remove();
+                        $("#myupload").show();
+                        $("#urlId").val("");
+                        deleteImage(key);
+                    });
+                    $("#myupload").hide();
+                    $("#urlId").val(data.fileSrc);
+				}
+                $("#stateTypeId").val(data.stateType);
+            }.bind(this),
+            error:function(err, status){
+                console.log(err);
+            }});
+    }
+    function submitReview(){
+        let checked = true;
+        if($('#titleId').val().length ==0){
+            alert("请填写内容标题");
+            checked = false;
+		}else if($("#urlId").val().length ==0){
+            alert("请上传图片或者填写图片路径");
+            checked = false;
+        }
+		if(checked){
+		    var ii = layer.load();
+            if(id !=null){
+                this.updateReview();
+            }else{
+                $.ajax({
+                    type: 'POST',
+                    url: '/insertReview',
+                    data: $('#reviewForm').serialize(),
+                    dataType:'json',
+                    success:function(data, status){
+                        window.location.href = "/review";
+                    }.bind(this),
+                    error:function(err, status){
+                    }});
+            }
+            layer.close(ii);
+		}
+	}
+    function updateReview() {
+        currReview.title = $('#titleId').val();
+        currReview.fileSrc = $("#urlId").val();
+        currReview.stateType = $("#stateTypeId").val();
+        currReview.operUserId = $("#userId").val();
+        $.ajax({
+            type: 'POST',
+            url: '/updateReview',
+            data: JSON.stringify(currReview),
+            dataType:'json',
+            contentType : 'application/json',
+            success:function(data, status){
+                window.location.href = "/review";
+            }.bind(this),
+            error:function(err, status){
+            }});
+    }
+    function file_ajax_submit(file) {
+    	var ii = layer.load();
+        var formData = new FormData();
+        formData.append('file', $('#fileImage')[0].files[0]);
+        $.ajax({
+            url: '/upload',
+            type: 'POST',
+            cache: false,
+            data: formData,
+            processData: false,
+            contentType: false
+        }).done(function(res) {
+			res = JSON.parse(res);
+            let html = '<div class="Thumb_li" style="width:217px; height:217px; "><div class="bg"><a href="javascript:" class="Thumb_delete" title="删除" >删除</a></div>' +
+                '<img id="uploadImage" src="' + res.url + '" class="upload_image" />'+
+                '</div>';
+            $("#preview").html(html);
+            $('.Thumb_li').hover(function(){
+                $(this).children('.bg').fadeIn();
+            },function(){
+                $(this).children('.bg').fadeOut();
+            });
+            $(".Thumb_delete").click(function(){
+                $(this).parent().parent('.Thumb_li').remove();
+                $("#myupload").show();
+                $("#urlId").val("");
+                deleteImage(res.key);
+            });
+            $("#myupload").hide();
+            $("#urlId").val(res.url);
+            layer.close(ii);
+        }).fail(function(res) {});
+        
+    }
+
+    function deleteImage(key) {
+        $.ajax({
+            type: 'GET',
+            url: '/deletefile',
+            data: {"key":key},
+            dataType:'json',
+            success:function(data, status){
+            }.bind(this),
+            error:function(err, status){
+            }});
+    }
+    function GetQueryString(name){
+        var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+        var r = window.location.search.substr(1).match(reg);
+        if(r!=null)return  unescape(r[2]); return null;
+    }
+</script>

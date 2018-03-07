@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html class=" js csstransforms3d"><head>
+	<meta charset="utf-8">
+	<meta name="renderer" content="webkit">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>用户管理</title>
+	<link rel="stylesheet" href="css/base.css">
+	<link rel="stylesheet" href="css/page.css">
+	<!--[if lte IE 8]>
+	<link href="css/ie8.css" rel="stylesheet" type="text/css"/>
+	<![endif]-->
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/main.js"></script>
+	<script type="text/javascript" src="js/modernizr.js"></script>
+	<script type="text/javascript" src="js/PagingManage.js"></script>
+	<!--[if IE]>
+	<script src="http://libs.useso.com/js/html5shiv/3.7/html5shiv.min.js"></script>
+	<![endif]-->
+</head>
+
+<body style="background: #f6f5fa;">
+
+	<!--content S-->
+	<div class="super-content RightMain" id="RightMain">
+		
+		<!--header-->
+		<div class="superCtab">
+			<div class="ctab-title clearfix"><h3>用户管理</h3></div>
+			
+			<div class="ctab-Main">
+				
+				<div class="ctab-Mian-cont">
+					<div class="Mian-cont-btn clearfix">
+						<div class="operateBtn">
+							<a href="userAdd.html" class="greenbtn publish">添加用户</a>
+						</div>
+					</div>
+					
+					<div class="Mian-cont-wrap">
+						<div class="defaultTab-T">
+							<table border="0" cellspacing="0" cellpadding="0" class="defaultTable">
+								<tbody><tr><th class="t_2">用户名称</th><th class="t_3">发布时间</th><th class="t_4">操作</th></tr>
+							</tbody></table>
+						</div>
+						<table border="0" cellspacing="0" cellpadding="0" class="defaultTable defaultTable2">
+							<tbody id = "userList">
+						</tbody></table>
+						<!--pages S-->
+						<div class="pageSelect" id="complete">
+
+						</div>
+						<!--pages E-->
+					</div>
+				
+				</div>
+			</div>
+		</div>
+		<!--main-->
+	</div>
+	<!--content E-->
+	<div class="layuiBg"></div><!--公共遮罩-->
+	<!--栏目管理-->
+	<div class="Columnbox layuiBox" id="quanxian">
+		<div class="layer-title clearfix"><h2>权限管理</h2><span class="layerClose"></span></div>
+		<div class="layer-content" id="quanxianId">
+
+		</div>
+	</div>
+</body>
+</html>
+<script>
+    var pageSize = 10;
+    var currUserId="";
+    $(function(){
+        this.getUsers(1,pageSize,'');
+    }.bind(this))
+
+    function getUsers(pageNo,pageSize,keyWords) {
+        var user = new User(pageNo,pageSize,keyWords);
+        $.ajax({
+            type: 'POST',
+            url: '/getusers',
+            data: user,
+            dataType:'json',
+            success:function(data, status){
+                this.PagingManage($('#complete'),data.total, data.pageSize, data.pageNum,data.pages);
+                var users = data.list;
+                let usersHtml = '';
+                for(var i =0 ;i<users.length;i++){
+                    if(users[i].account == 'admin'){
+                        usersHtml += '<tr><td class="t_2"><a href="#">'+users[i].account+'</a></td>' +
+                            '<td class="t_3">'+this.timeFormat(users[i].createTime,'yyyy-MM-dd')+'</td><td class="t_4"><div class="btn">' +
+                            '<a href="userAdd?id=' +users[i].id+ '" class="modify">修改</a></div></td></tr>';
+					}else{
+                        usersHtml +='<tr><td class="t_2"><a href="#">'+users[i].account+'</a></td>' +
+                            '<td class="t_3">'+this.timeFormat(users[i].createTime,'yyyy-MM-dd')+'</td><td class="t_4"><div class="btn">' +
+                            '<a href="javascript:;" class="Top" onclick="OpenDiv('+users[i].id+');">权限</a>' +
+                            '<a href="userAdd?id=' +users[i].id+ '" class="modify">修改</a>' +
+                            '<a href="javascript:;" class="delete" onclick="deleteUser(' +users[i].id+ ')">删除</a></div></td></tr>';
+					}
+                }
+                document.getElementById("userList").innerHTML = usersHtml;
+            }.bind(this),
+            error:function(err, status){
+            }});
+    }
+    function User(pageNo,pageSize,keywords){
+        this.pageNo = pageNo;
+        this.pageSize = pageSize;
+        this.keywords = keywords;
+    }
+    function switchPage(divId, page) {
+        this.getUsers(page,pageSize,$('#keywords').val());
+    }
+    function searchUser() {
+        this.getUsers(1,pageSize,$('#keywords').val());
+    }
+
+    function deleteUser(id) {
+        var r=confirm("确认要删除用户吗？");
+        if (r==true){
+            $.ajax({
+                type: 'POST',
+                url: '/deleteuser',
+                data: {"id":id},
+                dataType:'json',
+                success:function(data, status){
+                    this.getUsers(1,pageSize,$('#keywords').val());
+                }.bind(this),
+                error:function(err, status){
+                }});
+        }
+    }
+
+    function timeFormat(date,fmt) { //author: meizz
+        var date = new Date(date);
+        let showValue = fmt;
+        const o = {
+            'M+': date.getMonth() + 1, //月份
+            'd+': date.getDate(), //日
+            'h+': date.getHours(), //小时
+            'm+': date.getMinutes(), //分
+            's+': date.getSeconds(), //秒
+            'q+': Math.floor((date.getMonth() + 3) / 3) //季度
+            //'S': date.getMilliseconds() //毫秒
+        };
+        if (/(y+)/.test(showValue)) {
+            showValue = showValue.replace(RegExp.$1, (`${date.getFullYear()}${''}`).
+            substr(4 - RegExp.$1.length));
+        }
+        for (const k in o) {
+            if (new RegExp(`(${k})`).test(showValue)) {
+                showValue = showValue.replace(RegExp.$1, (RegExp.$1.length === 1) ?
+                    (o[k]) : ((`00${o[k]}`).substr((`${''}${o[k]}`).length)));
+            }
+        }
+        return showValue;
+    }
+
+    function OpenDiv(id){
+        currUserId = id;
+        $.ajax({
+            type: 'POST',
+            url: '/getRolesByUserId',
+            data: {"id":id},
+            dataType:'json',
+            success:function(data, status){
+				let userStatus = 1;
+				let reviewStatus = 1;
+				let listenStatus = 1;
+				let learnStatus = 1;
+				let readStatus = 1;
+				for(let i=0;i<data.length;i++) {
+					let infoRole = data[i];
+					if (infoRole.url == "user") {
+						userStatus = infoRole.status;
+					}
+					if (infoRole.url == "review") {
+						reviewStatus = infoRole.status;
+					}
+					if (infoRole.url == "listen") {
+						listenStatus = infoRole.status;
+					}
+					if (infoRole.url == "learn") {
+						learnStatus = infoRole.status;
+					}
+					if (infoRole.url == "read") {
+						readStatus = infoRole.status;
+					}
+				}
+				let userHtml = '<input type="checkbox" id="checkbox_d1"  class="chk_4" onclick=roleManager("user");>' +
+                    '<label for="checkbox_d1"></label>';
+				let reviewHtml = '<input type="checkbox" id="checkbox_d2" class="chk_4" onclick=roleManager("review");>' +
+                    '<label for="checkbox_d2"></label>';
+				let listenHtml = '<input type="checkbox" id="checkbox_d3" class="chk_4" onclick=roleManager("listen");>' +
+                    '<label for="checkbox_d3"></label>';
+			    let learnHtml =  '<input type="checkbox" id="checkbox_d4" class="chk_4" onclick=roleManager("learn");>' +
+                    '<label for="checkbox_d4"></label>';
+                let readHtml = 	'<input type="checkbox" id="checkbox_d5" class="chk_4" onclick=roleManager("read");>' +
+                    '<label for="checkbox_d5"></label>';
+				if(userStatus == 1){
+                    userHtml = '<input type="checkbox" id="checkbox_d1" checked class="chk_4" onclick=roleManager("user");>' +
+                        '<label for="checkbox_d1"></label>';
+				}
+                if(reviewStatus == 1){
+                    reviewHtml = '<input type="checkbox" id="checkbox_d2" checked class="chk_4" onclick=roleManager("review");>' +
+                        '<label for="checkbox_d2"></label>';
+                }
+                if(listenStatus == 1){
+                    listenHtml = '<input type="checkbox" id="checkbox_d3" checked class="chk_4" onclick=roleManager("listen");>' +
+                        '<label for="checkbox_d3"></label>';
+                }
+                if(learnStatus == 1){
+                    learnHtml = '<input type="checkbox" id="checkbox_d4" checked class="chk_4" onclick=roleManager("learn");>' +
+                        '<label for="checkbox_d4"></label>';
+                }
+                if(readStatus == 1){
+                    readHtml = '<input type="checkbox" id="checkbox_d5" checked class="chk_4" onclick=roleManager("read");>' +
+                        '<label for="checkbox_d5"></label>';
+                }
+
+                let roleHtml = '<ul class="colu-title clearfix">' +
+                    '<li class="li-1">页面名称</li><li class="li-2">页面地址</li><li class="li-4">权限开关</li>' +
+                    '</ul>' +
+                    '<div class="colu-list">' +
+                    '<ul class="colu-cont clearfix">' +
+                    '<li class="li-1">用户管理</li>' +
+                    '<li class="li-2">user</li>' +
+                    '<li class="li-4">' +
+                     userHtml +
+                    '</li>' +
+                    '</ul>' +
+                    '</div>' +
+                    '<div class="colu-list">' +
+                    '<ul class="colu-cont clearfix">' +
+                    '<li class="li-1">往期内容</li>' +
+                    '<li class="li-2">review</li>' +
+                    '<li class="li-4">' +
+                    reviewHtml+
+                    '</li>' +
+                    '</ul>' +
+                    '</div>' +
+                    '<div class="colu-list"> ' +
+                    '<ul class="colu-cont clearfix"> ' +
+                    '<li class="li-1">一起听</li>' +
+                    '<li class="li-2">listen</li>' +
+                    '<li class="li-4">' +
+                    listenHtml+
+                    '</li> ' +
+                    '</ul> ' +
+                    '</div>' +
+                    '<div class="colu-list">' +
+                    '<ul class="colu-cont clearfix"> ' +
+                    '<li class="li-1">一起学</li>' +
+                    '<li class="li-2">learn</li>' +
+                    '<li class="li-4">' +
+                    learnHtml+
+                    '</li> ' +
+                    '</ul>' +
+                    '</div>' +
+                    '<div class="colu-list">' +
+                    '<ul class="colu-cont clearfix"> ' +
+                    '<li class="li-1">一起读</li>' +
+                    '<li class="li-2">read</li>' +
+                    '<li class="li-4">' +
+                    readHtml+
+                    '</li>' +
+                    '</ul>' +
+                    '</div>';
+                document.getElementById("quanxianId").innerHTML = roleHtml;
+                document.getElementById("quanxian").style.display="block";
+            }.bind(this),
+            error:function(err, status){
+            }});
+    }
+    function roleManager(pageUrl) {
+        let checked = event.target.checked;
+        $.ajax({
+            type: 'POST',
+            url: '/getRolesByUserId',
+            data: {"id":currUserId},
+            dataType:'json',
+            success:function(data, status){
+               if(data.length == 0){
+                   insertInfoRole(currUserId,pageUrl,checked);
+			   }else{
+                   let isExist = false;
+                   for(let i=0;i<data.length;i++){
+                       let infoRole = data[i];
+                       if(infoRole.url == pageUrl){
+                           updateInfoRole(currUserId,checked,pageUrl);
+                           isExist = true;
+                           break;
+					   }
+				   }
+				   if(!isExist){
+                       insertInfoRole(currUserId,pageUrl,checked);
+				   }
+			   }
+            }.bind(this),
+            error:function(err, status){
+            }});
+    }
+    function insertInfoRole(userId,pageUrl,status) {
+        $.ajax({
+            type: 'POST',
+            url: '/insertInfoRole',
+            data: {"userId":userId,"url":pageUrl,"status":status?1:0},
+            dataType:'json',
+            success:function(data, status){
+            }.bind(this),
+            error:function(err, status){
+            }});
+    }
+    function updateInfoRole(userId,status,pageUrl) {
+        $.ajax({
+            type: 'POST',
+            url: '/updateInfoRole',
+            data: {"id":userId,"status":status?1:0,"url":pageUrl},
+            dataType:'json',
+            success:function(data, status){
+            }.bind(this),
+            error:function(err, status){
+            }});
+
+    }
+</script>

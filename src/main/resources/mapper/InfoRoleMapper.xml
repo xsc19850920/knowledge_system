@@ -1,0 +1,23 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD com.example.Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace = "com.knowledge.web.mapper.InfoRoleMapper">
+    <resultMap id = "result" type = "com.knowledge.web.domain.InfoRole">
+        <result property = "infoRoleId" column = "info_role_id"/>
+        <result property = "userId" column = "user_id"/>
+        <result property = "url" column = "url"/>
+        <result property = "status" column = "status"/>
+    </resultMap>
+    <select id = "getRolesByUserId" resultMap = "result">
+        SELECT * FROM info_role where user_id = #{id}
+    </select>
+    <insert id="insertInfoRole">
+        INSERT INTO info_role (info_role_id,user_id,url,status) values (#{infoRole.infoRoleId},#{infoRole.userId},#{infoRole.url},#{infoRole.status})
+    </insert>
+
+    <update id="updateInfoRole" >
+        UPDATE info_role SET status = #{status} WHERE  user_id = #{id} and url = #{url}
+    </update>
+
+</mapper>

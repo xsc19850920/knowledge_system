@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html class=" js csstransforms3d"><head>
+	<meta charset="utf-8">
+	<meta name="renderer" content="webkit">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>文章发布</title>
+	<link rel="stylesheet" href="css/base.css">
+	<link rel="stylesheet" href="css/page.css">
+	<!--[if lte IE 8]>
+	<link href="css/ie8.css" rel="stylesheet" type="text/css"/>
+	<![endif]-->
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/main.js"></script>
+	<script type="text/javascript" src="js/modernizr.js"></script>
+	<script type="text/javascript" src="js/PagingManage.js"></script>
+</head>
+
+<body style="background: #f6f5fa;">
+
+	<!--content S-->
+	<div class="super-content RightMain" id="RightMain">
+		
+		<!--header-->
+		<div class="superCtab">
+		<div class="ctab-title clearfix"><h3>一起听</h3></div>
+			<div class="ctab-Main">
+				<div class="ctab-Main-title">
+					<ul class="clearfix">
+						<li id="101" class="cur" name="category"><a href="javascript:;" onclick ="searchInfoListenByCategoryId(101);" >启蒙英语</a></li>
+						<li id="201" name="category"><a href="javascript:;" onclick ="searchInfoListenByCategoryId(201);">古典音乐</a></li>
+						<li id="301" name="category"><a href="javascript:;" onclick ="searchInfoListenByCategoryId(301);">晚安故事</a></li>
+						<li id="401" name="category"><a href="javascript:;" onclick ="searchInfoListenByCategoryId(401);">好听儿歌</a></li>
+					</ul>
+				</div>
+				
+				<div class="ctab-Mian-cont">
+					<div class="Mian-cont-btn clearfix">
+						<div class="operateBtn">
+							<a href="listenAdd" class="greenbtn publish">发布一起听</a>
+						</div>
+						<div class="searchBar">
+							<input type="text" id="keywords" value="" class="form-control srhTxt" placeholder="输入标题关键字搜索">
+							<input type="button" class="srhBtn" value="" onclick="searchInfoListen();">
+						</div>
+					</div>
+					
+					<div class="Mian-cont-wrap">
+						<div class="defaultTab-T">
+							<table border="0" cellspacing="0" cellpadding="0" class="defaultTable">
+								<tbody><tr><th class="t_1">音频标题</th><th class="t_2">发布时间</th><th class="t_3">最新标识</th><th class="t_4">是否有效</th><th class="t_5">操作</th></tr>
+							</tbody></table>
+						</div>
+						<table border="0" cellspacing="0" cellpadding="0" class="defaultTable defaultTable2">
+							<tbody id = "infoListenList">
+						</tbody></table>
+						<!--pages S-->
+						<div class="pageSelect" id="complete">
+						</div>
+						<!--pages E-->
+					</div>
+				
+				</div>
+			</div>
+		</div>
+		<!--main-->
+		
+	</div>
+	<!--content E-->
+</body></html>
+<script>
+    
+    var ids = localStorage.getItem("categoryId");
+    if (ids) {
+ 	localStorage.removeItem("categoryId")
+    //$("#"+ids + ' a').click();
+    //alert(ids);
+    //this.searchInfoListenByCategoryId(ids);
+    $("#101").removeClass();
+    $("#201").removeClass();
+    $("#301").removeClass();
+    $("#401").removeClass();
+    
+    $("#"+ids).addClass('cur');
+    }
+    var pageSize = 10;
+    var currcategoryId = ids ? ids : 101;
+    $(function(){
+        this.getInfoListens(1,pageSize,'',currcategoryId);
+    }.bind(this))
+	
+    function getInfoListens(pageNo,pageSize,keyWords,categoryId) {
+        var infoListen = new InfoListen(pageNo,pageSize,keyWords,categoryId);
+        $.ajax({
+            type: 'POST',
+            url: '/getInfoListens',
+            data: infoListen,
+            dataType:'json',
+            success:function(data, status){
+                this.PagingManage($('#complete'),data.total, data.pageSize, data.pageNum,data.pages);
+                var infoListens = data.list;
+                let infoListenHtml = '';
+                for(var i =0 ;i<infoListens.length;i++){
+                
+                if(this.isDisplayNew(infoListens[i].flagNew)=="否"){
+                
+                    infoListenHtml += 	'<tr><td class="t_1">'+infoListens[i].title+'</td><td class="t_2">'+this.timeFormat(infoListens[i].createTime*1000,'yyyy-MM-dd')+'</td>' +
+                        '<td class="t_3">'+this.isDisplayNew(infoListens[i].flagNew)+'</td>'+
+                        '<td class="t_4">'+this.isDisplay(infoListens[i].stateType)+'</td><td class="t_5"><div class="btn">' +
+                        '<a href="javascript:;" class="Top" onclick="updateListennNewSign(' +infoListens[i].infoId+ ')">已取消</a>'+
+                        '<a href="listenAdd?id=' +infoListens[i].infoId+ '" class="modify">修改</a>' +
+                        '<a href="javascript:;" class="delete" onclick="deleteInfoListen(' +infoListens[i].infoId+ ')">删除</a></div></td></tr>';
+                }else{
+                	
+                	infoListenHtml += 	'<tr><td class="t_1">'+infoListens[i].title+'</td><td class="t_2">'+this.timeFormat(infoListens[i].createTime*1000,'yyyy-MM-dd')+'</td>' +
+                        '<td class="t_3">'+this.isDisplayNew(infoListens[i].flagNew)+'</td>'+
+                        '<td class="t_4">'+this.isDisplay(infoListens[i].stateType)+'</td><td class="t_5"><div class="btn">' +
+                        '<a href="javascript:;" class="Top" onclick="updateListennNewSign(' +infoListens[i].infoId+ ')">取消最新标识</a>'+
+                        '<a href="listenAdd?id=' +infoListens[i].infoId+ '" class="modify">修改</a>' +
+                        '<a href="javascript:;" class="delete" onclick="deleteInfoListen(' +infoListens[i].infoId+ ')">删除</a></div></td></tr>';
+                	
+                }
+                }
+               
+                document.getElementById("infoListenList").innerHTML = infoListenHtml;
+            }.bind(this),
+            error:function(err, status){
+            }});
+    }
+    function InfoListen(pageNo,pageSize,keywords,categoryId){
+        this.pageNo = pageNo;
+        this.pageSize = pageSize;
+        this.keywords = keywords;
+        this.categoryId = categoryId;
+    }
+    function switchPage(divId, page) {
+        this.getInfoListens(page,pageSize,$('#keywords').val(),currcategoryId);
+    }
+    function searchInfoListen() {
+        this.getInfoListens(1,pageSize,$('#keywords').val(),currcategoryId);
+    }
+
+    function deleteInfoListen(id) {
+        var r=confirm("确认要删除该内容吗？");
+        if (r==true){
+            $.ajax({
+                type: 'POST',
+                url: '/deleteInfoListen',
+                data: {"id":id},
+                dataType:'json',
+                success:function(data, status){
+                    this.getInfoListens(1,pageSize,$('#keywords').val(),currcategoryId);
+                }.bind(this),
+                error:function(err, status){
+                }});
+        }
+    }
+    function updateListennNewSign(id) {
+       
+            $.ajax({
+                type: 'POST',
+                url: '/updateListennNewSign',
+                data: {"id":id},
+                dataType:'json',
+                success:function(data, status){
+                 this.getInfoListens(1,pageSize,'',currcategoryId);
+                    alert("最新标识取消成功");
+                }.bind(this),
+                error:function(err, status){
+                }});
+    }
+    function isDisplay(stateType) {
+        if(stateType == 1){
+            return "有效";
+        }else{
+            return "无效";
+        }
+    }
+    function isDisplayNew(flagNew) {
+        if(flagNew == 1){
+            return "是";
+        }else{
+            return "否";
+        }
+    }
+
+    function searchInfoListenByCategoryId(categoryId) {
+        currcategoryId = categoryId;
+        localStorage.setItem("categoryId",  categoryId);
+		this.getInfoListens(1,pageSize,'',categoryId);
+		let menus = document.getElementsByName("category");
+		for(let i = 0;i<menus.length;i++){
+			menus[i].className = "";
+		}
+		event.target.parentNode.className = "cur";
+    }
+    function timeFormat(date,fmt) { //author: meizz
+        var date = new Date(date);
+        let showValue = fmt;
+        const o = {
+            'M+': date.getMonth() + 1, //月份
+            'd+': date.getDate(), //日
+            'h+': date.getHours(), //小时
+            'm+': date.getMinutes(), //分
+            's+': date.getSeconds(), //秒
+            'q+': Math.floor((date.getMonth() + 3) / 3) //季度
+            //'S': date.getMilliseconds() //毫秒
+        };
+        if (/(y+)/.test(showValue)) {
+            showValue = showValue.replace(RegExp.$1, (`${date.getFullYear()}${''}`).
+            substr(4 - RegExp.$1.length));
+        }
+        for (const k in o) {
+            if (new RegExp(`(${k})`).test(showValue)) {
+                showValue = showValue.replace(RegExp.$1, (RegExp.$1.length === 1) ?
+                    (o[k]) : ((`00${o[k]}`).substr((`${''}${o[k]}`).length)));
+            }
+        }
+        return showValue;
+    }
+</script>

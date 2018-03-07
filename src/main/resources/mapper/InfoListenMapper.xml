@@ -1,0 +1,57 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD com.example.Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace = "com.knowledge.web.mapper.InfoListenMapper">
+    <resultMap id = "result" type = "com.knowledge.web.domain.InfoListen">
+        <result property = "createTime" column = "create_time"/>
+        <result property = "modifyTime" column = "modify_time"/>
+        <result property = "operIp" column = "oper_ip"/>
+        <result property = "operUserId" column = "oper_user_id"/>
+        <result property = "delFlag" column = "del_flag"/>
+        <result property = "infoId" column = "info_id"/>
+        <result property = "categoryId" column = "category_id"/>
+        <result property = "title" column = "title"/>
+        <result property = "flagNew" column = "flag_new"/>
+        <result property = "flagTop" column = "flag_top"/>
+        <result property = "stateType" column = "state_type"/>
+        <association property="infoFile" column="info_id"
+                     select="com.knowledge.web.mapper.InfoFileMapper.getInfoFileById">
+        </association>
+    </resultMap>
+    <select id = "getInfoListens" resultMap = "result">
+        SELECT * FROM info_listen where del_flag = 0
+        <if test="keywords != null and keywords.length()>0">
+            and title like CONCAT('%', #{keywords}, '%')
+        </if>
+        <if test="categoryId != null">
+            and category_id = #{categoryId}
+        </if>
+        	 order by modify_time desc
+    </select>
+
+    <select id = "getInfoListenById" resultMap = "result">
+        SELECT * FROM info_listen  where info_id = #{id} and del_flag = 0 order by modify_time desc;
+    </select>
+
+    <insert id="insertInfoListen">
+        INSERT INTO info_listen (create_time,modify_time,oper_ip,oper_user_id,del_flag,info_id,category_id,title,flag_new,flag_top,state_type) values
+        (#{infoListen.createTime},#{infoListen.modifyTime},#{infoListen.operIp},#{infoListen.operUserId},#{infoListen.delFlag}
+         ,#{infoListen.infoId},#{infoListen.categoryId},#{infoListen.title},#{infoListen.flagNew},#{infoListen.flagTop},#{infoListen.stateType})
+    </insert>
+
+    <update id="deleteInfoListen" >
+        UPDATE info_listen SET del_flag = 1 WHERE info_id = #{id}
+    </update>
+    
+    <update id="updateListennNewSign" >
+        UPDATE info_listen SET flag_new = 0 WHERE info_id = #{id}
+    </update>
+
+    <update id="updateInfoListen" >
+        UPDATE info_listen SET title = #{infoListen.title},category_id = #{infoListen.categoryId},modify_time = #{infoListen.modifyTime}
+        ,oper_user_id = #{infoListen.operUserId},flag_new = #{infoListen.flagNew},flag_top = #{infoListen.flagTop},state_type = #{infoListen.stateType}
+        WHERE info_id = #{infoListen.infoId}
+    </update>
+
+</mapper>

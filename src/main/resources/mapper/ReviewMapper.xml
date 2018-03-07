@@ -1,0 +1,42 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD com.example.Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace = "com.knowledge.web.mapper.ReviewMapper">
+    <resultMap id = "result" type = "com.knowledge.web.domain.Review">
+        <result property = "createTime" column = "create_time"/>
+        <result property = "modifyTime" column = "modify_time"/>
+        <result property = "operIp" column = "oper_ip"/>
+        <result property = "operUserId" column = "oper_user_id"/>
+        <result property = "delFlag" column = "del_flag"/>
+        <result property = "reviewId" column = "review_id"/>
+        <result property = "fileSrc" column = "file_src"/>
+        <result property = "stateType" column = "state_type"/>
+        <result property = "title" column = "title"/>
+    </resultMap>
+    <select id = "getReviews" resultMap = "result">
+        SELECT * FROM review where del_flag = 0 
+        <if test="keywords != null and keywords.length()>0">
+            and title like CONCAT('%', #{keywords}, '%')
+        </if>
+        	order by modify_time desc
+    </select>
+
+    <select id = "getReviewById" resultMap = "result">
+        SELECT * FROM review where review_id = #{id} and del_flag = 0 ;
+    </select>
+
+    <insert id="insertReview">
+        INSERT INTO review (review_id,file_src,title,state_type,del_flag,oper_user_id,oper_ip,create_time,modify_time)
+        values (#{review.reviewId},#{review.fileSrc},#{review.title},#{review.stateType},#{review.delFlag}
+        ,#{review.operUserId},#{review.operIp},#{review.createTime},#{review.modifyTime})
+    </insert>
+
+    <update id="deleteReview" >
+        UPDATE review SET del_flag = 1 WHERE review_id = #{id}
+    </update>
+
+    <update id="updateReview" >
+        UPDATE review SET title = #{review.title},file_src = #{review.fileSrc},modify_time = #{review.modifyTime},state_type = #{review.stateType},oper_user_id = #{review.operUserId} WHERE review_id = #{review.reviewId}
+    </update>
+</mapper>

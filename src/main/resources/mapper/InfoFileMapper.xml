@@ -1,0 +1,33 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD com.example.Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace = "com.knowledge.web.mapper.InfoFileMapper">
+    <resultMap id = "result" type = "com.knowledge.web.domain.InfoFile">
+        <result property = "infoFileId" column = "info_file_id"/>
+        <result property = "infoId" column = "info_id"/>
+        <result property = "fileType" column = "file_type"/>
+        <result property = "fileSrc" column = "file_src"/>
+        <result property = "duration" column = "duration"/>
+        <result property = "displayOrder" column = "display_order"/>
+        <result property = "title" column = "title"/>
+        <result property = "detail" column = "detail"/>
+        <result property = "memo" column = "memo"/>
+    </resultMap>
+
+    <select id = "getInfoFileById" resultMap = "result">
+        SELECT * FROM info_file where info_id = #{id};
+    </select>
+
+    <insert id="insertInfoFile">
+        INSERT INTO info_file (info_file_id,info_id,file_type,file_src,duration,display_order,title,detail,memo)
+        values
+        (#{infoFile.infoFileId},#{infoFile.infoId},#{infoFile.fileType},#{infoFile.fileSrc},#{infoFile.duration}
+        ,#{infoFile.displayOrder},#{infoFile.title},#{infoFile.detail},#{infoFile.memo})
+    </insert>
+
+    <update id="updateInfoFile" >
+        UPDATE info_file SET file_src = #{infoFile.fileSrc},duration = #{infoFile.duration}
+        ,title = #{infoFile.title},detail = #{infoFile.detail},memo = #{infoFile.memo} WHERE info_file_id = #{infoFile.infoFileId}
+    </update>
+</mapper>

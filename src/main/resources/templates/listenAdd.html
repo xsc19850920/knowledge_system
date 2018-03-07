@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html class=" js csstransforms3d"><head>
+	<meta charset="utf-8">
+	<meta name="renderer" content="webkit">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>文章发布-发布</title>
+	<link rel="stylesheet" href="css/base.css">
+	<link rel="stylesheet" href="css/page.css">
+	<!--[if lte IE 8]>
+	<link href="css/ie8.css" rel="stylesheet" type="text/css"/>
+	<![endif]-->
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/main.js"></script>
+	<script type="text/javascript" src="js/modernizr.js"></script>
+	<script type="text/javascript" src="js/jquery.selectui.js"></script>
+	<script type="text/javascript" src="js/layer/layer.js"></script>	
+	<link rel="stylesheet" type="text/css" href="js/webuploader/webuploader.css">    
+    <link rel="stylesheet" type="text/css" href="js/webuploader/demo.css">
+	<script src="http://pv.sohu.com/cityjson?ie=utf-8"></script>
+	<script>
+	$(function($) {
+		$("select").selectui({
+			// 是否自动计算宽度
+			autoWidth: true,
+			// 是否启用定时器刷新文本和宽度
+			interval: true
+		});
+	});
+	</script>
+	<!--[if IE]>
+	<script src="http://libs.useso.com/js/html5shiv/3.7/html5shiv.min.js"></script>
+	<![endif]-->
+	<script src="js/utf8-jsp/third-party/zeroclipboard/ZeroClipboard.js" type="text/javascript" defer></script></head>
+
+	<body style="background: rgb(246, 245, 250);">
+	<!--content S-->
+	<div class="super-content">
+		
+		<div class="superCtab">
+			<div class="publishArt">
+				<h4>发布一起听</h4>
+				<div class="pubMain">
+					<a href="javascript:history.go(-1)" class="backlistBtn"><i class="ico-back"></i>返回列表</a>
+					<form action="" method="post" id="listenForm">
+						<h5 class="pubtitle">选择分类</h5>
+						<div class="pubselect">
+							<span class="select_ui"><span class="select_text_ui" style="min-width: 6em;">请选择分类</span><b class="select_arrow"></b>
+								<select name="categoryId" id = "categoryId">
+								<option value="101">启蒙英语</option>
+								<option value="201">古典音乐</option>
+								<option value="301">晚安故事</option>
+								<option value="401">好听儿歌</option>
+							</select></span>
+						</div>
+						<h5 class="pubtitle">音频标题</h5>
+						<div class="pub-txt-bar">
+							<input type="text" class="shuruTxt" name="title" id="titleId" maxlength="60">
+						</div>
+						<h5 class="pubtitle">上传音频</h5>
+						<div class="Thumbnails clearfix">
+							<div class="Thumblist" id="preview">
+							</div>
+							<div class="Thumblistbg upload-img" id="myupload">
+								<input id="fileImage" type="file"  onchange="file_ajax_submit();" accept="audio/*"/>
+								<a href="javascript:;" class="Thumbbtn"><i class="ico-download"></i>上传音频</a>
+							</div>
+						</div>
+						<h5 class="pubtitle">音频地址</h5>
+						<div class="pub-txt-bar">
+							<input type="text" class="shuruTxt" id = "urlId" name="fileSrc" maxlength="300">
+							<a class="audition" id= "audition" href="/listenAdd" target="_blank">试听</a>
+						</div>
+
+						<input type="hidden" class="shuruTxt" name = "duration" id="durationId" value="0" maxlength="10">
+						
+						<h5 class="pubtitle">最新标识</h5>
+						<div class="pubselect">
+							<span class="select_ui"><span class="select_text_ui" style="min-width: 6em;">最新标识</span><b class="select_arrow"></b>
+								<select name="flagNew" id="flagNewId">
+								<option value="1">是</option>
+								<option value="0">否</option>
+							</select></span>
+						</div>
+						<h5 class="pubtitle">是否置顶</h5>
+						<div class="pubselect">
+							<span class="select_ui"><span class="select_text_ui" style="min-width: 6em;">是否置顶</span><b class="select_arrow"></b>
+								<select name="flagTop" id="flagTopId">
+								<option value="0">否</option>
+								<option value="1">是</option>
+							</select></span>
+						</div>
+						<h5 class="pubtitle">是否有效</h5>
+						<div class="pubselect">
+							<span class="select_ui"><span class="select_text_ui" style="min-width: 6em;">是否有效</span><b class="select_arrow"></b>
+								<select name="stateType" id ="stateTypeId">
+								<option value="1">有效</option>
+								<option value="0">无效</option>
+							</select></span>
+						</div>
+						<input type="hidden" value="0.0.0.0" name = "operIp" id="ipId">
+						<input type="hidden" value="" name = "operUserId" id="userId">
+						<div class="pub-btn">
+							<input type="button" id="submit" value="发布" class="saveBtn" onclick="submitListen();">
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</body></html>
+<script>
+
+	 var ids = localStorage.getItem("categoryId");
+    if (ids) {
+ 	localStorage.removeItem("categoryId")
+
+    $("#categoryId").find("option[value="+ids+"]").attr("selected",true);
+    //alert("option[value="+ids+"]");
+
+    }
+
+    var id = null;
+    var currInfoListen = null;
+    $(function(){
+        $("#ipId").val(returnCitySN["cip"]);
+        $("#userId").val(sessionStorage.getItem("id"));
+        id = GetQueryString("id");
+        if(id != null){
+            getInfoListenById(id);
+            $("#submit").val("修改");
+        }
+    }.bind(this));
+    function getInfoListenById() {
+        $.ajax({
+            type: 'POST',
+            url: '/getInfoListenById',
+            data: {"id":id},
+            dataType:'json',
+            success:function(data, status){
+                currInfoListen = data;
+                $("#titleId").val(data.title);
+                $("#flagNewId").val(data.flagNew);
+                $("#flagTopId").val(data.flagTop);
+                $("#durationId").val(data.infoFile.duration);
+                
+                
+                
+                $("#categoryId").val(data.categoryId);
+                if(data.infoFile.fileSrc !=null && data.infoFile.fileSrc.length > 0){
+                    let html = '<div class="Thumb_li" style="background:none; "><div class="bg" style="display: block !important; "><a href="javascript:" class="Thumb_delete" title="删除" >删除</a></div>' +
+                        '</div>';
+                    $("#preview").html(html);
+                    let start =  data.infoFile.fileSrc.indexOf("knowledge/")+10;
+                    let end =  data.infoFile.fileSrc.indexOf("?")
+                    let key  =  data.infoFile.fileSrc.substring(start,end)
+                    $(".Thumb_delete").click(function(){
+                        $(this).parent().parent('.Thumb_li').remove();
+                        $("#myupload").show();
+                        $("#urlId").val("");
+                        deleteImage(key);
+                    });
+                    $("#myupload").hide();
+                    $("#urlId").val( data.infoFile.fileSrc);
+                    $("#audition").attr("href",data.infoFile.fileSrc); 
+                }
+                $("#stateTypeId").val(data.stateType);
+            }.bind(this),
+            error:function(err, status){
+                console.log(err);
+            }});
+    }
+    function submitListen(){
+        let checked = true;
+        categoryId = $("#categoryId").val();
+        
+        if($('#titleId').val().length ==0){
+            alert("请填写音频标题");
+            checked = false;
+        }else if($("#urlId").val().length ==0){
+            alert("请上传音频或者填写音频地址");
+            checked = false;
+        }if(checked){
+            var ii = layer.load();
+            if(id !=null){
+                this.updateListen();
+            }else{
+                $.ajax({
+                    type: 'POST',
+                    url: '/insertInfoListen',
+                    data: $('#listenForm').serialize(),
+                    dataType:'json',
+                    success:function(data, status){
+                    localStorage.setItem("categoryId",  categoryId);
+                        window.location.href = "/listen";
+                    }.bind(this),
+                    error:function(err, status){
+                    }});
+            }
+            layer.close(ii);
+        }
+    }
+    function updateListen() {
+        currInfoListen.title = $('#titleId').val();
+        currInfoListen.infoFile.title = $('#titleId').val();
+        currInfoListen.infoFile.fileSrc = $("#urlId").val();
+        currInfoListen.infoFile.duration = "0";
+        currInfoListen.stateType = $("#stateTypeId").val();
+        currInfoListen.flagNew = $("#flagNewId").val();
+        currInfoListen.flagTop = $("#flagTopId").val();
+        currInfoListen.operUserId = $("#userId").val();
+        currInfoListen.categoryId = $("#categoryId").val();
+        $.ajax({
+            type: 'POST',
+            url: '/updateInfoListen',
+            data: JSON.stringify(currInfoListen),
+            dataType:'json',
+            contentType : 'application/json',
+            success:function(data, status){
+           
+            localStorage.setItem("categoryId",  currInfoListen.categoryId);
+                window.location.href = "/listen";
+				//history.go(-2);                
+                
+            }.bind(this),
+            error:function(err, status){
+            }});
+    }
+    function file_ajax_submit(file) {
+    	var ii = layer.load();
+        var formData = new FormData();
+        formData.append('file', $('#fileImage')[0].files[0]);
+        $.ajax({
+            url: '/upload',
+            type: 'POST',
+            cache: false,
+            data: formData,
+            processData: false,
+            contentType: false
+        }).done(function(res) {
+            res = JSON.parse(res);
+            let html = '<div class="Thumb_li" style="background:none; "><div class="bg" style="display: block !important; "><a href="javascript:" class="Thumb_delete" title="删除" >删除</a></div>' +
+                '</div>';
+            $("#preview").html(html);
+            $(".Thumb_delete").click(function(){
+                $(this).parent().parent('.Thumb_li').remove();
+                $("#myupload").show();
+                $("#urlId").val("");
+                deleteImage(res.key);
+            });
+            $("#myupload").hide();
+            $("#urlId").val(res.url);
+            $("#audition").attr("href",res.url); 
+            layer.close(ii);
+        }).fail(function(res) {});
+        
+    }
+
+    function deleteImage(key) {
+        $.ajax({
+            type: 'GET',
+            url: '/deletefile',
+            data: {"key":key},
+            dataType:'json',
+            success:function(data, status){
+            }.bind(this),
+            error:function(err, status){
+            }});
+    }
+    function GetQueryString(name){
+        var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+        var r = window.location.search.substr(1).match(reg);
+        if(r!=null)return  unescape(r[2]); return null;
+    }
+</script>
